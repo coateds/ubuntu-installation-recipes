@@ -21,7 +21,7 @@ cookbook "ubuntu-installation-recipes", path: "C:/Users/dcoate/Documents/GitRepo
 
 ## install-gui
 
-### default recipe in the kitchen cookbook
+###  recipe in the kitchen cookbook
 ```
 include_recipe 'ubuntu-installation-recipes::install-gui'
 ```
@@ -52,7 +52,7 @@ end
 
 ### install-gui (recipe) in library cookbook
 ```
-# Ruuning this recipe will install a GUI and rdp client
+# Running this recipe will install a GUI and rdp client
 # When this is done use the windows RDP client to connect
 # With the user/password contained in the .kitchen\[name].yml file
 
@@ -62,4 +62,77 @@ end
 
 package 'xfce4'
 package 'xrdp'
+```
+
+## install-samba
+
+### command to run in library cookbook
+```
+chef generate file smb.conf
+```
+
+###  recipe in the kitchen cookbook
+```
+include_recipe 'ubuntu-installation-recipes::install-samba'
+```
+
+### default_spec (unit) in kitchen cookbook
+```
+    # install-samba section
+    it 'installs samba' do
+      expect(chef_run).to install_package('samba')
+    end
+
+    it 'creates the /samba directory with attributes' do
+      expect(chef_run).to create_directory('/samba').with(
+        owner:  'root',
+        group:  'root',
+        mode:   '0755'
+      )
+    end
+
+    it 'creates the file smb.conf' do
+      expect(chef_run).to create_file('/etc/samba/smb.conf')
+    end
+    # /install-samba section
+```
+
+### default_test (integration) in kitchen cookbook
+```
+# install-samba section
+describe package('samba') do
+  it { should be_installed }
+end
+
+describe directory('/smbshare') do
+  it { should exist }
+  its('owner') { should cmp 'root' }
+  its('group') { should cmp 'root' }
+  its('mode') { should eq 00777 }
+end
+
+# in its simplest form, this test will work without running the recipe
+# the smb.conf will exist, but in a generic version.
+# so this is a worthless test at this time
+describe file('/etc/samba/smb.conf') do
+  it { should exist }
+end
+# /install-samba section
+```
+
+### install-gui (recipe) in library cookbook
+```
+apt_update
+package 'samba'
+
+directory '/smbshare' do
+  owner 'root'
+  group 'root'
+  mode '0777'
+  action :create
+end
+
+cookbook_file '/etc/samba/smb.conf' do
+  source 'smb.conf'
+end
 ```
