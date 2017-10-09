@@ -1,3 +1,9 @@
+#
+# Cookbook:: ubuntu-installation-recipes
+# Recipe:: install-samba
+#
+# Copyright:: 2017, The Authors, All Rights Reserved.
+
 apt_update
 package 'samba'
 
